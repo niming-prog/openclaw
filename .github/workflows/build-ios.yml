@@ -1,12 +1,12 @@
 name: Build OpenClaw iOS IPA
 
 on:
-  workflow_dispatch: # 允许手动点击触发
+  workflow_dispatch:
 
 jobs:
   build:
     name: Build and Package
-    runs-on: macos-latest # 白嫖最新的云端 Mac
+    runs-on: macos-latest
 
     steps:
       - name: Checkout Source Code
@@ -15,7 +15,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20' # 适配 OpenClaw 环境
+          node-version: '20'
 
       - name: Install pnpm
         run: npm install -g pnpm
@@ -27,30 +27,39 @@ jobs:
         run: pnpm install
 
       - name: Generate Xcode Project
-        run: pnpm ios:gen # 触发 xcodegen 生成工程文件
+        run: pnpm ios:gen
 
       - name: Build Unsigned iOS App
+        # 【关键修复】明确告诉服务器，进入 apps/ios 目录执行编译！
+        working-directory: apps/ios
         run: |
-          # 强行跳过苹果签名机制进行编译
+          PROJECT_PATH=$(find . -name "*.xcodeproj" | head -n 1)
+          echo "🎉 找到工程文件: $PROJECT_PATH"
+          
+          PROJECT_NAME=$(basename "$PROJECT_PATH" .xcodeproj)
+          echo "🚀 使用 Scheme: $PROJECT_NAME"
+          
           xcodebuild clean build \
-            -project OpenClaw.xcodeproj \
-            -scheme OpenClaw \
+            -project "$PROJECT_PATH" \
+            -scheme "$PROJECT_NAME" \
             -configuration Release \
             -sdk iphoneos \
+            CONFIGURATION_BUILD_DIR="${PWD}/build" \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
-            
+
       - name: Package into IPA
+        # 【关键修复】同样在 apps/ios 目录下进行打包
+        working-directory: apps/ios
         run: |
-          # 将编译出的文件打包成 AltStore 识别的格式
           mkdir -p Payload
-          # 注意：这里的 OpenClaw.app 可能因工程配置不同而名字不同，通常在 build 目录下
-          find . -name "*.app" -type d -exec cp -R {} Payload/ \;
+          cp -R build/*.app Payload/
           zip -qr OpenClaw.ipa Payload
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
           name: OpenClaw-iOS-App
-          path: OpenClaw.ipa
+          # 【关键修复】从正确的子目录把打包好的文件提取出来上传
+          path: apps/ios/OpenClaw.ipa
