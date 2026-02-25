@@ -17,6 +17,18 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 【终极杀招】强制服务器切换到支持 Swift 6.2 的最新/Beta版 Xcode
+      - name: Setup latest Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: 'latest-beta'
+
+
       - name: Install pnpm
         run: npm install -g pnpm
 
@@ -28,15 +40,6 @@ jobs:
         
       - name: Install Dependencies
         run: pnpm install
-
-      - name: Hack Swift Tools Version
-        # 在整个项目中全局搜索 Package.swift，并把开头的 6.2 强行替换成 6.1
-        run: |
-          echo "开始降级 Swift Tools 版本..."
-          find . -name "Package.swift" -exec sed -i '' 's/swift-tools-version: 6.2.0/swift-tools-version: 6.1.0/g' {} +
-          find . -name "Package.swift" -exec sed -i '' 's/swift-tools-version: 6.2/swift-tools-version: 6.1/g' {} +
-          find . -name "Package.swift" -exec sed -i '' 's/swift-tools-version:6.2/swift-tools-version:6.1/g' {} +
-          echo "✅ 版本降级替换完成！"
 
       - name: Generate Xcode Project
         run: pnpm ios:gen
