@@ -1,0 +1,56 @@
+name: Build OpenClaw iOS IPA
+
+on:
+  workflow_dispatch: # 允许手动点击触发
+
+jobs:
+  build:
+    name: Build and Package
+    runs-on: macos-latest # 白嫖最新的云端 Mac
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # 适配 OpenClaw 环境
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install xcodegen
+        run: brew install xcodegen
+
+      - name: Install Dependencies
+        run: pnpm install
+
+      - name: Generate Xcode Project
+        run: pnpm ios:gen # 触发 xcodegen 生成工程文件
+
+      - name: Build Unsigned iOS App
+        run: |
+          # 强行跳过苹果签名机制进行编译
+          xcodebuild clean build \
+            -project OpenClaw.xcodeproj \
+            -scheme OpenClaw \
+            -configuration Release \
+            -sdk iphoneos \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+            
+      - name: Package into IPA
+        run: |
+          # 将编译出的文件打包成 AltStore 识别的格式
+          mkdir -p Payload
+          # 注意：这里的 OpenClaw.app 可能因工程配置不同而名字不同，通常在 build 目录下
+          find . -name "*.app" -type d -exec cp -R {} Payload/ \;
+          zip -qr OpenClaw.ipa Payload
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenClaw-iOS-App
+          path: OpenClaw.ipa
