@@ -25,6 +25,18 @@ jobs:
 
       - name: Install Dependencies
         run: pnpm install
+        
+      - name: Install Dependencies
+        run: pnpm install
+
+      - name: Hack Swift Tools Version
+        # 在整个项目中全局搜索 Package.swift，并把开头的 6.2 强行替换成 6.1
+        run: |
+          echo "开始降级 Swift Tools 版本..."
+          find . -name "Package.swift" -exec sed -i '' 's/swift-tools-version: 6.2.0/swift-tools-version: 6.1.0/g' {} +
+          find . -name "Package.swift" -exec sed -i '' 's/swift-tools-version: 6.2/swift-tools-version: 6.1/g' {} +
+          find . -name "Package.swift" -exec sed -i '' 's/swift-tools-version:6.2/swift-tools-version:6.1/g' {} +
+          echo "✅ 版本降级替换完成！"
 
       - name: Generate Xcode Project
         run: pnpm ios:gen
