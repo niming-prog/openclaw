@@ -34,7 +34,12 @@ jobs:
 
       - name: Install xcodegen
         run: brew install xcodegen
-        
+
+      - name: Install Linting Tools
+        run: brew install swiftlint swiftformat
+
+      - name: Install Dependencies
+        run: pnpm install        
       - name: Install Dependencies
         run: pnpm install
 
