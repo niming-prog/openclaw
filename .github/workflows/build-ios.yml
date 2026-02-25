@@ -34,9 +34,6 @@ jobs:
 
       - name: Install xcodegen
         run: brew install xcodegen
-
-      - name: Install Dependencies
-        run: pnpm install
         
       - name: Install Dependencies
         run: pnpm install
