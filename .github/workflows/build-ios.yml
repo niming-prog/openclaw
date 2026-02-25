@@ -40,8 +40,6 @@ jobs:
 
       - name: Install Dependencies
         run: pnpm install        
-      - name: Install Dependencies
-        run: pnpm install
 
       - name: Generate Xcode Project
         run: pnpm ios:gen
