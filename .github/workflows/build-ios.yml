@@ -42,7 +42,6 @@ jobs:
         run: pnpm ios:gen
 
       - name: Build Unsigned iOS App
-        # 【关键修复】明确告诉服务器，进入 apps/ios 目录执行编译！
         working-directory: apps/ios
         run: |
           PROJECT_PATH=$(find . -name "*.xcodeproj" | head -n 1)
@@ -55,7 +54,7 @@ jobs:
             -project "$PROJECT_PATH" \
             -scheme "$PROJECT_NAME" \
             -configuration Release \
-            -sdk iphoneos \
+            -destination "generic/platform=iOS" \
             CONFIGURATION_BUILD_DIR="${PWD}/build" \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
